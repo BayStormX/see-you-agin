@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ลาก่อนนะ 🌙</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&family=Mitr:wght@300;400;500;600&family=Caveat:wght@400;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <div id="particles-container"></div>
+  <div id="stars-layer"></div>
+  <canvas id="cursor-canvas"></canvas>
+  <div id="aurora"></div>
+
+  <!-- ===== SCREEN 1: INTRO ===== -->
+  <section class="screen active" id="screen-1">
+    <div class="s1-bg-orb orb1"></div>
+    <div class="s1-bg-orb orb2"></div>
+    <div class="moon-container">
+      <div class="moon-ring"></div>
+      <div class="moon">🌙</div>
+      <div class="moon-glow"></div>
+    </div>
+    <div class="intro-text">
+      <p class="tag-line">ຮາໂຫລວວວ ມີໄລຈະບອກ<span class="blink-dot">...</span></p>
+      <h1 class="main-title">ກ່ອນທີ່ຈະ<br><span class="highlight">ຫ່າງກັນ</span></h1>
+      <p class="subtitle">ກົດອ່ານຕໍ່ ✨</p>
+    </div>
+    <button class="next-btn pulse-btn" onclick="goToScreen(2)">ອ່ານເລີຍ →</button>
+  </section>
+
+  <!-- ===== SCREEN 2: LETTER ===== -->
+  <section class="screen" id="screen-2">
+    <div class="letter-card floating-card">
+      <div class="card-shine"></div>
+      <div class="card-deco top-left">✦</div>
+      <div class="card-deco top-right">✦</div>
+      <p class="letter-para">ເຮີ້ຍຍຍຍ <span class="emoji-inline">👋</span></p>
+      <p class="letter-para">ຮູ້ວ່າມື້ນັ້ນໃກ້ມາແລ້ວ ວັນທີ່ເຈົ້າຕ້ອງໄປ ຮຽນຕໍ່ ມີຊີວິດໃຫມ່ ໄປເຈີະຫຍັງດີໆ ອີກຫຼາຍ</p>
+      <p class="letter-para">ກະດີໃຈນຳ ຈາກໃຈເລີຍ <span class="emoji-inline">🎓</span></p>
+      <p class="letter-para small-italic">ແຕ່ໃນໃຈກະແອບເສົ້າຢູ່ ເວົ້າແທ້ໆເລິຍລະ</p>
+    </div>
+    <button class="next-btn" onclick="goToScreen(3)">ອ່ານຕໍ່ →</button>
+  </section>
+
+  <!-- ===== SCREEN 3: CONFESSION ===== -->
+  <section class="screen" id="screen-3">
+    <div class="starfall-bg"></div>
+    <div class="confession-block">
+      <div class="big-emoji wobble">🌟</div>
+      <p class="conf-text">ຕອນນີ້ເຮົາກະຈະໄປຮຽນຕໍ່ຄືກັນເລີຍ</p>
+      <p class="conf-text">ແຕ່ທຸກຄັ້ງທີ່ຄິດວ່າ... ຫຼັງຈາກນີ້ທຸກຢ່າງຈະປ່ຽນໄປບໍ່?</p>
+      <p class="conf-text soft-text">ແຕ່ລະຄົນໄປຄົນລະທາງ ຄົນລະເວລາ...</p>
+      <div class="divider-star">· · · ✦ · · ·</div>
+      <p class="conf-text highlight-text">ມັນກະຍັງຄິດຮອດເຈົ້າຄືເກົ່ານັ່ນລະ 🙈</p>
+    </div>
+    <button class="next-btn" onclick="goToScreen(4)">ต่อไป →</button>
+  </section>
+
+  <!-- ===== SCREEN 4: BUBBLE CARDS ===== -->
+  <section class="screen" id="screen-4">
+    <audio id="bgMusic" loop>
+      <source src="https://www.bensound.com/bensound-music/bensound-cute.mp3" type="audio/mpeg" />
+    </audio>
+    <p class="screen4-title">ສິ່ງທີ່ຢາກບອກຕໍ່ຈາກນີ້<span class="blink-dot">...</span></p>
+    <div class="bubble-grid" id="bubbleGrid">
+      <div class="bubble-card" style="--hue:270" onclick="popBubble(this)">
+        <span class="bubble-icon">🌙</span>
+        <p>ขอให้ไปถึงฝันนะ</p>
+      </div>
+      <div class="bubble-card" style="--hue:320" onclick="popBubble(this)">
+        <span class="bubble-icon">☕</span>
+        <p>อย่าลืมกินข้าวด้วย</p>
+      </div>
+      <div class="bubble-card" style="--hue:190" onclick="popBubble(this)">
+        <span class="bubble-icon">🌸</span>
+        <p>ดูแลตัวเองด้วยนะ</p>
+      </div>
+      <div class="bubble-card" style="--hue:45" onclick="popBubble(this)">
+        <span class="bubble-icon">💌</span>
+        <p>แวะทักมาบ้างก็ได้นะ</p>
+      </div>
+      <div class="bubble-card" style="--hue:150" onclick="popBubble(this)">
+        <span class="bubble-icon">🎓</span>
+        <p>เรียนให้สนุกนะ</p>
+      </div>
+      <div class="bubble-card" style="--hue:0" onclick="popBubble(this)">
+        <span class="bubble-icon">🫶</span>
+        <p>คิดถึงอยู่เสมอ</p>
+      </div>
+    </div>
+    <p class="bubble-hint" id="bubbleHint">กดการ์ดเพื่อเปิดอ่าน ✨</p>
+    <button class="next-btn hidden" id="nextBtn4" onclick="goToScreen(5)">อ่านต่อ →</button>
+  </section>
+
+  <!-- ===== SCREEN 5: MEMORY JAR ===== -->
+  <section class="screen" id="screen-5">
+    <div class="jar-section">
+      <div class="jar-container">
+        <div class="jar" id="memory-jar">
+          <div class="jar-lid"></div>
+          <div class="jar-body">
+            <div class="memory-note" id="note-1">😂 ครั้งแรกที่คุย</div>
+            <div class="memory-note" id="note-2">☕ ช่วงเวลาดีๆ</div>
+            <div class="memory-note" id="note-3">🌧 วันที่ฟินเฉยๆ</div>
+            <div class="memory-note" id="note-4">💬 ทุกบทสนทนา</div>
+            <div class="memory-note" id="note-5">✨ ช่วงเวลาพวกนี้</div>
+          </div>
+        </div>
+        <p class="jar-label">โหมดเก็บความทรงจำ 🫙</p>
+      </div>
+      <div class="jar-text">
+        <p>ทุกอย่างที่ผ่านมา ถึงจะไม่เยอะ</p>
+        <p>แต่ก็ดีพอที่จะอยากเก็บเอาไว้</p>
+      </div>
+    </div>
+    <button class="next-btn" onclick="goToScreen(6)">หน้าต่อไป →</button>
+  </section>
+
+  <!-- ===== SCREEN 6: CATCH STARS ===== -->
+  <section class="screen" id="screen-6">
+    <div class="game-section">
+      <h2 class="game-title">จับดาวก่อนนะ ⭐</h2>
+      <p class="game-sub">กดดาวที่ล่องลอยให้ได้ 5 ดวง</p>
+      <div class="game-area" id="gameArea"></div>
+      <div class="score-bar">
+        <span>จับได้: <strong id="starScore">0</strong>/5</span>
+      </div>
+      <div class="game-msg hidden" id="gameMsg">เก่งมากเลย! 🌟</div>
+    </div>
+    <button class="next-btn hidden" id="nextBtn6" onclick="goToScreen(7)">ต่อไป →</button>
+  </section>
+
+  <!-- ===== SCREEN 7: PROMISE ===== -->
+  <section class="screen" id="screen-7">
+    <div class="promise-section">
+      <div class="promise-card">
+        <div class="promise-icon">🤝</div>
+        <h2 class="promise-title">ບໍ່ວ່າຊິໄປໃສ</h2>
+        <div class="promise-list">
+          <div class="promise-item" style="--d:0.1s"><span class="pi-icon">📱</span><span>ກະຍັງທັກຫາກັນໄດ້ນະ</span></div>
+          <div class="promise-item" style="--d:0.3s"><span class="pi-icon">🌏</span><span>ຄົນລະທີ່ ແຕ່ຢູ່ໃນໂລກດຽວກັນ</span></div>
+          <div class="promise-item" style="--d:0.5s"><span class="pi-icon">💫</span><span>ດາວດວງດຽວກັນເບິ່ງພ້ອມກັນກະດ່ະ</span></div>
+          <div class="promise-item" style="--d:0.7s"><span class="pi-icon">🎓</span><span>ຮຽນໃຫ້ດີເດີ ແລ້ວຢ່ານອນເດິກຫຼາຍ</span></div>
+        </div>
+      </div>
+    </div>
+    <button class="next-btn" onclick="goToScreen(8)">ต่อไป →</button>
+  </section>
+
+  <!-- ===== SCREEN 8: ซึ้งๆ จนน้ำตาไหล ===== -->
+  <section class="screen" id="screen-8">
+    <div class="zing-bg"></div>
+    <div class="zing-container" id="zingContainer">
+
+      <div class="zing-line hidden" id="z1">
+        <span class="zing-text zing-soft">รู้มั้ย...</span>
+      </div>
+
+      <div class="zing-line hidden" id="z2">
+        <span class="zing-text">ทุกครั้งที่คุยกัน</span>
+      </div>
+
+      <div class="zing-line hidden" id="z3">
+        <span class="zing-text">มันทำให้วันนั้นดีขึ้นมากเลย 🌙</span>
+      </div>
+
+      <div class="zing-line hidden" id="z4">
+        <span class="zing-text zing-soft">แค่ได้คุย แค่รู้ว่าแกอยู่ที่นั่น</span>
+      </div>
+
+      <div class="zing-line hidden" id="z5">
+        <span class="zing-text zing-soft">ก็รู้สึกดีขึ้นแล้ว...</span>
+      </div>
+
+      <div class="zing-line hidden" id="z6">
+        <span class="zing-text zing-mid">ก็เลยกลัวนิดๆ ว่าพอห่างกันแล้ว</span>
+      </div>
+
+      <div class="zing-line hidden" id="z7">
+        <span class="zing-text zing-mid">ความรู้สึกแบบนี้มันจะไปอยู่ที่ไหน...</span>
+      </div>
+
+      <div class="zing-line hidden" id="z8">
+        <span class="zing-text zing-big">แต่ก็ขอให้แกรู้ไว้ว่า</span>
+      </div>
+
+      <div class="zing-line hidden" id="z9">
+        <span class="zing-text zing-climax">ช่วงเวลาที่มีแกอยู่<br>มันพิเศษมากนะ 🌟</span>
+      </div>
+
+      <div class="zing-line hidden" id="z10">
+        <span class="zing-text zing-end">ขอบคุณที่เป็นแกนะ 🫶</span>
+      </div>
+
+    </div>
+    <button class="next-btn hidden" id="nextBtn8" onclick="goToScreen(9)">ลาก่อนนะ... →</button>
+  </section>
+
+  <!-- ===== SCREEN 9: FAREWELL + NO BTN CHAOS ===== -->
+  <section class="screen" id="screen-9">
+    <div class="final-section">
+      <div class="farewell-msg">
+        <h2 class="farewell-title">ລະກະ ລາກ່ອນເດີ 🌙</h2>
+        <p class="farewell-sub">ຂໍໃຫ້ໄປໄດ້ດີທີ່ສຸດ</p>
+        <p class="farewell-sub">ບໍ່ວ່າຈະເປ໊ນແບບໃດ໋ ກະຈະຄິດຮອດຢູ່ສະເຫມີ</p>
+        <p class="farewell-tiny">ແຄ່ຢາກໃຫ້ຮູ້ວ່າ ຕອນນີ້ ມີຄົນຄິດຖຶງງແກກຢູ່ສະເຫມີ 🫶</p>
+      </div>
+      <div class="question-block">
+        <p class="q-text">ແລ້ວເຈີກັນໃຫມ່? 👀</p>
+        <div class="btn-row">
+          <button class="ok-btn chaos-no" id="noBtn">ຍັງ...</button>
+          <button class="ok-btn yes-btn" id="yesBtn" onclick="showEnding()">แน่นอน! 🤝</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ending overlay -->
+  <div id="ending-overlay" class="hidden">
+    <div class="ending-content">
+      <div class="ending-emoji" id="endEmoji">🌙</div>
+      <h2 class="ending-title">ໄດ້ເຈີະກັນແນ່ນອນ! 🎉</h2>
+      <p class="ending-msg">ບໍ່ວ່າຈະດົນສ່ຳໃດ໋</p>
+      <p class="ending-msg">ຊ່ວງເວລາດີດີ ຖ້າຢູ່ຕະຫຼອດ 💫</p>
+      <div class="confetti-area" id="confettiArea"></div>
+      <button class="restart-btn" onclick="restartAll()">ดูอีกรอบ 🔁</button>
+    </div>
+  </div>
+
+  <!-- Progress dots -->
+  <div class="progress-dots" id="progressDots">
+    <span class="dot active" onclick="goToScreen(1)"></span>
+    <span class="dot" onclick="goToScreen(2)"></span>
+    <span class="dot" onclick="goToScreen(3)"></span>
+    <span class="dot" onclick="goToScreen(4)"></span>
+    <span class="dot" onclick="goToScreen(5)"></span>
+    <span class="dot" onclick="goToScreen(6)"></span>
+    <span class="dot" onclick="goToScreen(7)"></span>
+    <span class="dot" onclick="goToScreen(8)"></span>
+    <span class="dot" onclick="goToScreen(9)"></span>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
