@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>ลาก่อนนะ 🌙</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&family=Mitr:wght@300;400;500;600&family=Caveat:wght@400;600;700&display=swap" rel="stylesheet" />
@@ -59,10 +59,13 @@
     <button class="next-btn" onclick="goToScreen(4)">ต่อไป →</button>
   </section>
 
+  <!-- Background music (outside screens so it survives innerHTML resets) -->
+  <audio id="bgMusic" loop>
+    <source src="https://www.bensound.com/bensound-music/bensound-cute.mp3" type="audio/mpeg" />
+  </audio>
+
   <!-- ===== SCREEN 4: BUBBLE CARDS ===== -->
   <section class="screen" id="screen-4">
-    <audio id="bgMusic" loop>
-    </audio>
     <p class="screen4-title">ສິ່ງທີ່ຢາກບອກຕໍ່ຈາກນີ້<span class="blink-dot">...</span></p>
     <div class="bubble-grid" id="bubbleGrid">
       <div class="bubble-card" style="--hue:270" onclick="popBubble(this)">
@@ -94,28 +97,31 @@
     <button class="next-btn hidden" id="nextBtn4" onclick="goToScreen(5)">อ่านต่อ →</button>
   </section>
 
-  <!-- ===== SCREEN 5: MEMORY JAR ===== -->
+  <!-- ===== SCREEN 5: ดาวที่เหมือนกัน ===== -->
   <section class="screen" id="screen-5">
-    <div class="jar-section">
-      <div class="jar-container">
-        <div class="jar" id="memory-jar">
-          <div class="jar-lid"></div>
-          <div class="jar-body">
-            <div class="memory-note" id="note-1">😂 ครั้งแรกที่คุย</div>
-            <div class="memory-note" id="note-2">☕ ช่วงเวลาดีๆ</div>
-            <div class="memory-note" id="note-3">🌧 วันที่ฟินเฉยๆ</div>
-            <div class="memory-note" id="note-4">💬 ทุกบทสนทนา</div>
-            <div class="memory-note" id="note-5">✨ ช่วงเวลาพวกนี้</div>
-          </div>
-        </div>
-        <p class="jar-label">โหมดเก็บความทรงจำ 🫙</p>
+    <div class="sky-scene">
+      <div class="sky-orb sky-orb1"></div>
+      <div class="sky-orb sky-orb2"></div>
+    </div>
+    <div class="sky-msg-wrap">
+      <div class="sky-icon-row">
+        <span class="sky-star s1">⭐</span>
+        <span class="sky-star s2">🌙</span>
+        <span class="sky-star s3">⭐</span>
       </div>
-      <div class="jar-text">
-        <p>ทุกอย่างที่ผ่านมา ถึงจะไม่เยอะ</p>
-        <p>แต่ก็ดีพอที่จะอยากเก็บเอาไว้</p>
+      <h2 class="sky-title">คืนไหนที่รู้สึกเหงา</h2>
+      <p class="sky-body">ลองแหงนหน้าขึ้นมองฟ้าดูนะ</p>
+      <p class="sky-body soft">เราก็กำลังมองดาวดวงเดียวกันอยู่</p>
+      <div class="sky-divider">· · · ✦ · · ·</div>
+      <p class="sky-body mid">ไม่ว่าจะอยู่คนละที่แค่ไหน</p>
+      <p class="sky-body mid">แต่ท้องฟ้าเราใช้ร่วมกันนะ 🌌</p>
+      <div class="sky-quote-wrap hidden" id="skyQuote">
+        <p class="sky-quote">ก็แปลว่า ไม่ได้ห่างกันขนาดนั้นหรอก</p>
+        <p class="sky-quote sky-quote-last">จริงมั้ย? 🥺</p>
       </div>
     </div>
-    <button class="next-btn" onclick="goToScreen(6)">หน้าต่อไป →</button>
+    <button class="sky-tap-btn" id="skyTapBtn" onclick="revealSkyQuote()">แหงนมองฟ้าด้วยกัน 🌙</button>
+    <button class="next-btn hidden" id="nextBtn5" onclick="goToScreen(6)">อ่านต่อ →</button>
   </section>
 
   <!-- ===== SCREEN 6: CATCH STARS ===== -->
@@ -202,7 +208,7 @@
   <section class="screen" id="screen-9">
     <div class="final-section">
       <div class="farewell-msg">
-        <h2 class="farewell-title">ລະກະ ລາກ່ອນເດີ 🌙</h2>
+        <h2 class="farewell-title">ແລ້ວກະ ລາກ່ອນເດີ 🌙</h2>
         <p class="farewell-sub">ຂໍໃຫ້ໄປໄດ້ດີທີ່ສຸດ</p>
         <p class="farewell-sub">ບໍ່ວ່າຈະເປ໊ນແບບໃດ໋ ກະຈະຄິດຮອດຢູ່ສະເຫມີ</p>
         <p class="farewell-tiny">ແຄ່ຢາກໃຫ້ຮູ້ວ່າ ຕອນນີ້ ມີຄົນຄິດຖຶງງແກກຢູ່ສະເຫມີ 🫶</p>
@@ -221,11 +227,11 @@
   <div id="ending-overlay" class="hidden">
     <div class="ending-content">
       <div class="ending-emoji" id="endEmoji">🌙</div>
-      <h2 class="ending-title">ໄດ້ເຈີະກັນອີກແນ່ນອນ! 🎉</h2>
+      <h2 class="ending-title">ຊ່ວງເວລາດີດີ ຈະຖ້າຢູ່ສະເຫມີ 🎉</h2>
       <p class="ending-msg">ບໍ່ວ່າຈະດົນສ່ຳໃດ໋</p>
-      <p class="ending-msg">ຊ່ວງເວລາດີດີ ຖ້າຢູ່ຕະຫຼອດ 💫</p>
+      <p class="ending-msg">ຫວັງວ່າໄລຍະທາງທີ່ຫ່າງໄກຈະບໍ່ເຮັດໃຫ້ໃຈເຮົາຫ່າງກັນເນາະ 💫</p>
       <div class="confetti-area" id="confettiArea"></div>
-      <button class="restart-btn" onclick="restartAll()">ເບຶ່ງອີກຮອບກະໄດ້ນະ 🔁</button>
+      <button class="restart-btn" onclick="restartAll()">ดูอีกรอบ 🔁</button>
     </div>
   </div>
 
