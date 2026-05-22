@@ -13,16 +13,151 @@ let gameStarInterval = null;
 let noBtnTimeout = null;
 let noBtnPos = { x: null, y: null };
 
+// ====== GLOBAL TYPEWRITER ENGINE ======
+// Selectors per screen — typed one element at a time, sequentially
+const SCREEN_TW_SELECTORS = {
+  1: ['.tag-line', '.main-title', '.subtitle'],
+  2: ['.letter-para'],
+  3: ['.conf-text', '.highlight-text'],
+  4: ['.screen4-title'],
+  5: ['.sky-title', '.sky-body'],
+  6: ['.game-title', '.game-sub'],
+  7: ['.promise-title'],
+  9: ['.farewell-title', '.farewell-sub', '.farewell-tiny', '.q-text'],
+};
+
+// ms per character — slow & emotional
+const TW_SPEED = 55;
+// pause between finishing one element and starting the next (ms)
+const TW_GAP = 450;
+
+const _twOriginals = new Map();
+
+function _saveOriginals(screenEl, selectors) {
+  selectors.forEach(sel => {
+    screenEl.querySelectorAll(sel).forEach(el => {
+      if (!_twOriginals.has(el)) _twOriginals.set(el, el.innerHTML);
+    });
+  });
+}
+
+function _hideElements(elements) {
+  elements.forEach(el => {
+    el.style.visibility = 'hidden';
+    el.style.opacity = '0';
+  });
+}
+
+function _typeNode(el, html, speed, onDone) {
+  const segments = html.split(/<br\s*\/?>/i).map(part => {
+    const d = document.createElement('div');
+    d.innerHTML = part;
+    return d.textContent;
+  });
+
+  el.style.visibility = 'visible';
+  el.style.opacity = '1';
+  el.innerHTML = '';
+  const cursor = document.createElement('span');
+  cursor.className = 'tw-cursor';
+  el.appendChild(cursor);
+
+  let segIdx = 0;
+  let chars = Array.from(segments[0] ?? '');
+  let charIdx = 0;
+
+  function tick() {
+    if (segIdx >= segments.length) {
+      cursor.classList.add('tw-done');
+      onDone?.();
+      return;
+    }
+    if (charIdx >= chars.length) {
+      segIdx++;
+      if (segIdx >= segments.length) {
+        cursor.classList.add('tw-done');
+        onDone?.();
+        return;
+      }
+      el.insertBefore(document.createElement('br'), cursor);
+      chars = Array.from(segments[segIdx] ?? '');
+      charIdx = 0;
+      setTimeout(tick, speed * 5);
+      return;
+    }
+    const ch = chars[charIdx];
+    el.insertBefore(document.createTextNode(ch), cursor);
+    charIdx++;
+    const pause = /[,.!?…ໆ。、]/.test(ch) ? speed * 6 : speed;
+    setTimeout(tick, pause);
+  }
+  tick();
+}
+
+// Screens whose .next-btn should be hidden until typing completes
+const SCREENS_WITH_GATED_BTN = [1, 2, 3, 7];
+
+function runScreenTypewriter(screenNum) {
+  const selectors = SCREEN_TW_SELECTORS[screenNum];
+  if (!selectors) return;
+
+  const screenEl = document.getElementById('screen-' + screenNum);
+  if (!screenEl) return;
+
+  _saveOriginals(screenEl, selectors);
+
+  const elements = [];
+  selectors.forEach(sel => {
+    screenEl.querySelectorAll(sel).forEach(el => {
+      if (!el.closest('.hidden') && !el.classList.contains('hidden')) {
+        elements.push(el);
+      }
+    });
+  });
+
+  if (elements.length === 0) return;
+
+  // Hide next-btn on this screen until typing is done
+  const gated = SCREENS_WITH_GATED_BTN.includes(screenNum);
+  const nextBtn = screenEl.querySelector('.next-btn:not(#nextBtn4):not(#nextBtn5):not(#nextBtn6):not(#nextBtn8)');
+  if (gated && nextBtn) {
+    nextBtn.classList.add('hidden');
+  }
+
+  _hideElements(elements);
+
+  setTimeout(function() {
+    function typeNext(i) {
+      if (i >= elements.length) {
+        // All done — reveal next-btn
+        if (gated && nextBtn) {
+          setTimeout(function() {
+            nextBtn.classList.remove('hidden');
+          }, 300);
+        }
+        return;
+      }
+      const el = elements[i];
+      const orig = _twOriginals.get(el) ?? el.innerHTML;
+      _typeNode(el, orig, TW_SPEED, function() {
+        setTimeout(function() { typeNext(i + 1); }, TW_GAP);
+      });
+    }
+    typeNext(0);
+  }, 200);
+}
+
+
+
 // ====== INIT ======
 document.addEventListener('DOMContentLoaded', () => {
   initParticles();
   initStarLayer();
   initCursorSparkle();
   initRippleEffect();
-  initJarObserver();
-  initNoBtnChaos();
-  spawnGameStars();
   initFallingStars();
+  // Typewrite screen 1 on load
+  setTimeout(() => runScreenTypewriter(1), 300);
 });
 
 // ====== SCREEN NAVIGATION ======
@@ -44,11 +179,14 @@ function goToScreen(num) {
 
     // Screen-specific init
     if (num === 4) autoPlayMusic();
-    if (num === 5) initJarAnimation();
+    if (num === 5) initSkyScreen();
     if (num === 6) startGameTimeout();
     if (num === 7) triggerPromiseItems();
     if (num === 8) startZingSequence();
-    if (num === 9) placeNoBtnInitial();
+    if (num === 9) initNoBtnChaos();
+
+    // Global typewriter for all screens
+    runScreenTypewriter(num);
   }, 350);
 }
 
@@ -232,34 +370,133 @@ function autoPlayMusic() {
   audio.play().catch(() => {});
 }
 
-// ====== ZING SEQUENCE (screen 8) ======
+// ====== ZING TYPING ENGINE (screen 8) ======
+
+// Preserve original innerHTML so replay works correctly
+const zingOriginals = {};
+
+function saveZingOriginals() {
+  ['z1','z2','z3','z4','z5','z6','z7','z8','z9','z10'].forEach(id => {
+    const span = document.querySelector(`#${id} .zing-text`);
+    if (span) zingOriginals[id] = span.innerHTML;
+  });
+}
+
+// Split innerHTML into plain-text segments, split on <br>
+function parseZingSegments(html) {
+  return html.split(/<br\s*\/?>/i).map(part => {
+    const d = document.createElement('div');
+    d.innerHTML = part;
+    return d.textContent; // strips tags, keeps text + emoji codepoints
+  });
+}
+
+// Type segments character-by-character into spanEl.
+// Array.from() keeps emoji as single items.
+// A blinking cursor rides at the insertion point the whole time.
+function typeChars(spanEl, segments, charDelay, onDone) {
+  spanEl.innerHTML = '';
+  const cursor = document.createElement('span');
+  cursor.className = 'zing-cursor';
+  spanEl.appendChild(cursor);
+
+  let segIdx = 0;
+  let chars   = Array.from(segments[0] ?? '');
+  let charIdx = 0;
+
+  function tick() {
+    // All segments finished
+    if (segIdx >= segments.length) {
+      cursor.classList.add('done');
+      setTimeout(() => { cursor.remove(); onDone?.(); }, 380);
+      return;
+    }
+    // Current segment finished → add <br>, move to next
+    if (charIdx >= chars.length) {
+      segIdx++;
+      if (segIdx >= segments.length) {
+        cursor.classList.add('done');
+        setTimeout(() => { cursor.remove(); onDone?.(); }, 380);
+        return;
+      }
+      spanEl.insertBefore(document.createElement('br'), cursor);
+      chars   = Array.from(segments[segIdx] ?? '');
+      charIdx = 0;
+      setTimeout(tick, charDelay * 5); // tiny breath at line-break
+      return;
+    }
+    // Type one character
+    spanEl.insertBefore(document.createTextNode(chars[charIdx]), cursor);
+    charIdx++;
+    setTimeout(tick, charDelay);
+  }
+
+  tick();
+}
+
 function startZingSequence() {
+  // Capture originals once (DOM is already ready at this point)
+  if (!Object.keys(zingOriginals).length) saveZingOriginals();
+
   const lines = ['z1','z2','z3','z4','z5','z6','z7','z8','z9','z10'];
-  // reset first
+
+  // Reset all lines + restore original text
   lines.forEach(id => {
     const el = document.getElementById(id);
-    if (el) { el.classList.add('hidden'); el.classList.remove('show'); }
+    if (!el) return;
+    el.classList.add('hidden');
+    el.classList.remove('show');
+    const span = el.querySelector('.zing-text');
+    if (span && zingOriginals[id]) span.innerHTML = zingOriginals[id];
   });
   document.getElementById('nextBtn8')?.classList.add('hidden');
 
-  let delay = 600;
-  lines.forEach((id, i) => {
-    setTimeout(() => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.classList.remove('hidden');
-      void el.offsetHeight;
-      el.classList.add('show');
-      // rain tears emoji on climax lines
-      if (id === 'z9' || id === 'z10') spawnTearsDrop();
-    }, delay);
-    delay += i < 5 ? 900 : 1100;
-  });
+  // Per-line config
+  // charDelay: ms per character  (higher = slower = more emotional weight)
+  // pauseAfter: ms after line finishes typing before next line starts
+  const cfg = [
+    { id:'z1',  charDelay:80,  pauseAfter:1400 }, // "รู้มั้ย..."         — slow open
+    { id:'z2',  charDelay:48,  pauseAfter:700  }, // "ทุกครั้งที่คุยกัน"
+    { id:'z3',  charDelay:42,  pauseAfter:700  }, // "มันทำให้วันนั้น... 🌙"
+    { id:'z4',  charDelay:38,  pauseAfter:900  }, // "แค่ได้คุย..."
+    { id:'z5',  charDelay:40,  pauseAfter:1600 }, // "ก็รู้สึกดี..."      — ellipsis breath
+    { id:'z6',  charDelay:42,  pauseAfter:700  }, // "ก็เลยกลัวนิดๆ..."
+    { id:'z7',  charDelay:38,  pauseAfter:1700 }, // "ความรู้สึกแบบนี้..." — heaviest pause
+    { id:'z8',  charDelay:62,  pauseAfter:1100 }, // "แต่ก็ขอให้แกรู้ไว้ว่า" — deliberate slow
+    { id:'z9',  charDelay:52,  pauseAfter:900  }, // climax 🌟
+    { id:'z10', charDelay:58,  pauseAfter:0    }, // ขอบคุณ 🫶
+  ];
 
-  // show next button after all lines
-  setTimeout(() => {
-    document.getElementById('nextBtn8')?.classList.remove('hidden');
-  }, delay + 400);
+  function showLine(i) {
+    if (i >= cfg.length) {
+      setTimeout(() => document.getElementById('nextBtn8')?.classList.remove('hidden'), 700);
+      return;
+    }
+
+    const { id, charDelay, pauseAfter } = cfg[i];
+    const el = document.getElementById(id);
+    if (!el) { showLine(i + 1); return; }
+
+    // Container fades in fast (0.15s CSS), typing starts instantly
+    el.classList.remove('hidden');
+    void el.offsetHeight;
+    el.classList.add('show');
+
+    const span = el.querySelector('.zing-text');
+    if (!span) {
+      if (id === 'z9' || id === 'z10') spawnTearsDrop();
+      setTimeout(() => showLine(i + 1), pauseAfter);
+      return;
+    }
+
+    const segments = parseZingSegments(zingOriginals[id] ?? span.innerHTML);
+    typeChars(span, segments, charDelay, () => {
+      if (id === 'z9' || id === 'z10') spawnTearsDrop();
+      setTimeout(() => showLine(i + 1), pauseAfter);
+    });
+  }
+
+  setTimeout(() => showLine(0), 500);
 }
 
 function spawnTearsDrop() {
@@ -305,35 +542,65 @@ function popBubble(el) {
   }
 }
 
-// ====== JAR ANIMATION ======
-function initJarAnimation() {
-  const notes = document.querySelectorAll('.memory-note');
-  notes.forEach((note, i) => {
+// ====== SKY SCREEN (screen 5) ======
+function initSkyScreen() {
+  // reset
+  const quote = document.getElementById('skyQuote');
+  const btn = document.getElementById('skyTapBtn');
+  const next = document.getElementById('nextBtn5');
+  if (quote) quote.classList.add('hidden');
+  if (btn) { btn.classList.remove('hidden'); btn.disabled = false; }
+  if (next) next.classList.add('hidden');
+
+  // animate stars entrance
+  document.querySelectorAll('.sky-star').forEach((s, i) => {
+    s.style.opacity = '0';
+    s.style.transform = 'translateY(20px) scale(0.5)';
     setTimeout(() => {
-      note.classList.add('visible');
-    }, i * 300 + 200);
+      s.style.transition = 'all 0.7s cubic-bezier(0.34,1.56,0.64,1)';
+      s.style.opacity = '1';
+      s.style.transform = 'translateY(0) scale(1)';
+    }, i * 200 + 300);
   });
 }
 
-function initJarObserver() {
-  // click jar to shake
-  const jar = document.getElementById('memory-jar');
-  if (jar) {
-    jar.addEventListener('click', () => {
-      jar.style.animation = 'none';
-      jar.style.transform = 'rotate(-5deg)';
-      setTimeout(() => {
-        jar.style.transform = 'rotate(5deg)';
-      }, 100);
-      setTimeout(() => {
-        jar.style.transform = 'rotate(-3deg)';
-      }, 200);
-      setTimeout(() => {
-        jar.style.transform = '';
-        jar.style.animation = '';
-      }, 300);
-    });
+function revealSkyQuote() {
+  const quote = document.getElementById('skyQuote');
+  const btn = document.getElementById('skyTapBtn');
+  const next = document.getElementById('nextBtn5');
+
+  if (btn) {
+    btn.style.transform = 'scale(0.92)';
+    btn.style.opacity = '0.6';
+    setTimeout(() => {
+      btn.style.transform = '';
+      btn.style.opacity = '0';
+      btn.style.pointerEvents = 'none';
+    }, 200);
   }
+
+  // spawn floating stars from button
+  const rect = btn?.getBoundingClientRect();
+  if (rect) {
+    for (let i = 0; i < 8; i++) {
+      setTimeout(() => spawnCatchSparkle(
+        rect.left + rect.width / 2 + (Math.random()-0.5)*60,
+        rect.top + rect.height / 2 + (Math.random()-0.5)*30
+      ), i * 100);
+    }
+  }
+
+  setTimeout(() => {
+    if (quote) {
+      quote.classList.remove('hidden');
+      void quote.offsetHeight;
+      quote.style.animation = 'skyQuoteIn 0.8s cubic-bezier(0.22,1,0.36,1) both';
+    }
+  }, 500);
+
+  setTimeout(() => {
+    if (next) next.classList.remove('hidden');
+  }, 1400);
 }
 
 // ====== STAR GAME ======
@@ -499,8 +766,11 @@ function placeNoBtnInitial() {
   noBtn.style.opacity = '1';
   noBtnClicks = 0;
 
-  noBtn.addEventListener('mouseenter', escapeBtnMouse);
-  noBtn.addEventListener('touchstart', escapeBtnTouch, { passive: true });
+  // Clone to remove any previously-added listeners before re-attaching
+  const fresh = noBtn.cloneNode(true);
+  noBtn.parentNode.replaceChild(fresh, noBtn);
+  fresh.addEventListener('mouseenter', escapeBtnMouse);
+  fresh.addEventListener('touchstart', escapeBtnTouch, { passive: true });
 }
 
 function escapeBtnMouse(e) {
@@ -630,13 +900,15 @@ function restartAll() {
   document.getElementById('ending-overlay').classList.add('hidden');
 
   // Reset no btn
-  const noBtn = document.getElementById('noBtn');
-  if (noBtn) {
-    noBtn.style.display = '';
-    noBtn.style.opacity = '1';
-    noBtn.style.pointerEvents = '';
-    noBtnClicks = 0;
-    placeNoBtnInitial();
+  noBtnClicks = 0;
+  const screen9 = document.getElementById('screen-9');
+  if (screen9) {
+    const nb = screen9.querySelector('#noBtn');
+    if (nb) {
+      nb.style.display = '';
+      nb.style.opacity = '1';
+      nb.style.pointerEvents = '';
+    }
   }
 
   // Remove vanish msg
@@ -793,24 +1065,12 @@ if (scoreEl) {
   observer.observe(scoreEl, { childList: true });
 }
 
-// ====== AUTO-ADVANCE HINT ======
-function showAutoHint() {
-  // Tiny hint after 8s of inaction on screen 1
-  setTimeout(() => {
-    if (currentScreen === 1) {
-      const hint = document.querySelector('.scroll-hint');
-      if (hint) {
-        hint.style.opacity = '1';
-        hint.style.animation = 'bounce 1s infinite';
-      }
-    }
-  }, 8000);
-}
-showAutoHint();
+
+
 
 // ====== WINDOW RESIZE ======
 window.addEventListener('resize', () => {
-  if (currentScreen === 9) placeNoBtnInitial();
+  if (currentScreen === 9) initNoBtnChaos();
 });
 
 // ====== CONSOLE EASTER EGG ======
