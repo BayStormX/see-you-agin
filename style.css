@@ -123,6 +123,13 @@ html, body {
 #cursor-canvas {
   position: fixed; inset: 0;
   pointer-events: none; z-index: 9999;
+  /* Hide on touch devices — canvas cursor is mouse-only */
+}
+
+/* Hide default cursor only on non-touch devices */
+@media (hover: hover) and (pointer: fine) {
+  body { cursor: none; }
+  a, button, [onclick], .dot, .bubble-card, .game-star { cursor: none; }
 }
 
 /* ====== TYPEWRITER CURSOR ====== */
@@ -173,6 +180,17 @@ html, body {
 .screen.active {
   opacity: 1; pointer-events: all;
   transform: translateY(0) scale(1);
+}
+
+/* Ensure buttons and interactive elements are always above canvas */
+.screen.active button,
+.screen.active .bubble-card,
+.screen.active .game-star,
+.screen.active .dot,
+#ending-overlay button,
+.progress-dots {
+  position: relative;
+  z-index: 10000;
 }
 
 .screen.exit-up {

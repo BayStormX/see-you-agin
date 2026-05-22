@@ -12,6 +12,7 @@ let noBtnClicks = 0;
 let gameStarInterval = null;
 let noBtnTimeout = null;
 let noBtnPos = { x: null, y: null };
+let bubblePopped = 0;
 
 // ====== GLOBAL TYPEWRITER ENGINE ======
 // Selectors per screen — typed one element at a time, sequentially
@@ -268,18 +269,26 @@ function initFallingStars() {
 
 // ====== CURSOR SPARKLE ======
 function initCursorSparkle() {
+  // Skip canvas cursor on touch-only devices
+  const isTouchOnly = !window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   const canvas = document.getElementById('cursor-canvas');
+
+  if (isTouchOnly) {
+    canvas.style.display = 'none';
+    return;
+  }
+
   const ctx = canvas.getContext('2d');
   let particles = [];
   let mouseX = -100, mouseY = -100;
 
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  window.addEventListener('resize', () => {
+  function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-  });
+  }
+  resizeCanvas();
+
+  window.addEventListener('resize', resizeCanvas);
 
   window.addEventListener('mousemove', (e) => {
     mouseX = e.clientX;
@@ -301,7 +310,6 @@ function initCursorSparkle() {
   });
 
   function drawCursor() {
-    // Custom cursor dot
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw cursor
@@ -518,8 +526,7 @@ function spawnTearsDrop() {
 }
 
 
-let bubblePopped = 0;
-const totalBubbles = 6;
+let totalBubbles = 6;
 
 function popBubble(el) {
   if (el.classList.contains('popped')) return;
@@ -671,6 +678,12 @@ function spawnGameStars() {
 }
 
 function startGameTimeout() {
+  // Clear any running game interval first
+  if (gameStarInterval) {
+    clearInterval(gameStarInterval);
+    gameStarInterval = null;
+  }
+
   starsCaught = 0;
   document.getElementById('starScore').textContent = '0';
   document.getElementById('gameMsg').classList.add('hidden');
@@ -749,6 +762,8 @@ function triggerPromiseItems() {
 }
 
 // ====== NO BUTTON CHAOS ======
+let _noBtn = null; // module-level ref to the live noBtn element
+
 function initNoBtnChaos() {
   placeNoBtnInitial();
 }
@@ -764,13 +779,16 @@ function placeNoBtnInitial() {
   noBtn.style.transform = 'translateX(-50%)';
   noBtn.style.fontSize = '15px';
   noBtn.style.opacity = '1';
+  noBtn.style.display = '';
+  noBtn.style.pointerEvents = '';
   noBtnClicks = 0;
 
-  // Clone to remove any previously-added listeners before re-attaching
+  // Clone to remove stale listeners, then keep a ref to the fresh clone
   const fresh = noBtn.cloneNode(true);
   noBtn.parentNode.replaceChild(fresh, noBtn);
-  fresh.addEventListener('mouseenter', escapeBtnMouse);
-  fresh.addEventListener('touchstart', escapeBtnTouch, { passive: true });
+  _noBtn = fresh;
+  _noBtn.addEventListener('mouseenter', escapeBtnMouse);
+  _noBtn.addEventListener('touchstart', escapeBtnTouch, { passive: true });
 }
 
 function escapeBtnMouse(e) {
@@ -782,7 +800,7 @@ function escapeBtnTouch(e) {
 }
 
 function moveNoBtn() {
-  const noBtn = document.getElementById('noBtn');
+  const noBtn = _noBtn;
   if (!noBtn) return;
 
   noBtnClicks++;
@@ -899,17 +917,9 @@ function restartAll() {
   // Hide overlay
   document.getElementById('ending-overlay').classList.add('hidden');
 
-  // Reset no btn
+  // Reset no btn — will be re-init by placeNoBtnInitial via goToScreen(9)
   noBtnClicks = 0;
-  const screen9 = document.getElementById('screen-9');
-  if (screen9) {
-    const nb = screen9.querySelector('#noBtn');
-    if (nb) {
-      nb.style.display = '';
-      nb.style.opacity = '1';
-      nb.style.pointerEvents = '';
-    }
-  }
+  _noBtn = null;
 
   // Remove vanish msg
   const msgs = document.getElementById('screen-9')?.querySelectorAll('div') || [];
@@ -937,6 +947,23 @@ function restartAll() {
   if (hint) { hint.textContent = 'กดการ์ดเพื่อเปิดอ่าน ✨'; hint.style.opacity = '1'; }
   const nb4 = document.getElementById('nextBtn4');
   if (nb4) nb4.classList.add('hidden');
+
+  // Reset sky screen 5
+  const skyQuote = document.getElementById('skyQuote');
+  const skyBtn = document.getElementById('skyTapBtn');
+  const skyNext = document.getElementById('nextBtn5');
+  if (skyQuote) skyQuote.classList.add('hidden');
+  if (skyBtn) { 
+    skyBtn.style.opacity = '1'; 
+    skyBtn.style.pointerEvents = 'auto'; 
+    skyBtn.style.transform = '';
+    skyBtn.classList.remove('hidden'); 
+  }
+  if (skyNext) skyNext.classList.add('hidden');
+
+  // Reset game screen 6
+  starsCaught = 0;
+  if (gameStarInterval) { clearInterval(gameStarInterval); gameStarInterval = null; }
 
   // Stop music
   const audio = document.getElementById('bgMusic');
